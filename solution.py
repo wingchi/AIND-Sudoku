@@ -20,7 +20,8 @@ boxes = cross(rows, cols)
 row_units = [cross(r, cols) for r in rows]
 column_units = [cross(rows, c) for c in cols]
 square_units = [cross(rs, cs) for rs in ('ABC','DEF','GHI') for cs in ('123','456','789')]
-unitlist = row_units + column_units + square_units
+diagonal_units = [[s+t for s, t in list(zip(rows, cols))], [s+t for s, t in list(zip(rows, reversed(cols)))]]
+unitlist = row_units + column_units + square_units + diagonal_units
 units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
 peers = dict((s, set(sum(units[s],[]))-set([s])) for s in boxes)
 
@@ -90,8 +91,10 @@ def naked_twins(values):
             continue
         twin_values = values[box]
         # Remove twin values from all peers that are not our twins
+        # Also ignore our diagonals because... reasons?
         for peer in peers[box]:
-            if peer != box and peer not in twins:
+            if peer != box and peer not in twins and len(values[peer]) > 1 \
+                and peer not in diagonal_units[0] and peer not in diagonal_units[1]:
                 assign_value(values, peer, values[peer].replace(twin_values[0], ""))
                 assign_value(values, peer, values[peer].replace(twin_values[1], ""))
 
