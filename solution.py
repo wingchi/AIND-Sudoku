@@ -12,18 +12,6 @@ def assign_value(values, box, value):
         assignments.append(values.copy())
     return values
 
-def naked_twins(values):
-    """Eliminate values using the naked twins strategy.
-    Args:
-        values(dict): a dictionary of the form {'box_name': '123456789', ...}
-
-    Returns:
-        the values dictionary with the naked twins eliminated from peers.
-    """
-
-    # Find all instances of naked twins
-    # Eliminate the naked twins as possibilities for their peers
-
 def cross(A, B):
     "Cross product of elements in A and elements in B."
     return [s+t for s in A for t in B]
@@ -80,6 +68,35 @@ def only_choice(values):
                 assign_value(values, dplaces[0], digit)
     return values
 
+def naked_twins(values):
+    """Eliminate values using the naked twins strategy.
+    Args:
+        values(dict): a dictionary of the form {'box_name': '123456789', ...}
+
+    Returns:
+        the values dictionary with the naked twins eliminated from peers.
+    """
+    # Find all instances of naked twins
+    # Eliminate the naked twins as possibilities for their peers
+
+    for box in boxes:
+        # Quit while you're ahead if the value in this box is not 2
+        if len(values[box]) != 2:
+            continue
+        # Find all the potential twins, triplets, etc in our peers
+        twins = [peer for peer in peers[box] if values[box] == values[peer] and len(values[box]) == 2]
+        # GTFO if we don't have a twin
+        if len(twins) < 2:
+            continue
+        twin_values = values[box]
+        # Remove twin values from all peers that are not our twins
+        for peer in peers[box]:
+            if peer != box and peer not in twins:
+                assign_value(values, peer, values[peer].replace(twin_values[0], ""))
+                assign_value(values, peer, values[peer].replace(twin_values[1], ""))
+
+    return values
+
 def reduce_puzzle(values):
     stalled = False
     while not stalled:
@@ -90,6 +107,8 @@ def reduce_puzzle(values):
         values = eliminate(values)
         # Use the Only Choice Strategy
         values = only_choice(values)
+        # Use the Naked Twins Strategy
+        values = naked_twins(values)
 
         # Check how many boxes have a determined value, to compare
         solved_values_after = len([box for box in values.keys() if len(values[box]) == 1])
